@@ -154,14 +154,36 @@ class Service extends BaseService
             $fields = $fields['input_filter'];
         }
 
-        $requiredProperties = $properties = [];
+        $serviceName = $service->getName();
+        $models = [
+            $serviceName => [
+                'id' => $serviceName,
+                'required' => [],
+                'properties' => [],
+            ]
+        ];
         foreach ($fields as $field) {
-            $properties[$field->getName()] = [
+            $fieldNameParts = explode('/', $field->getName(), 2);
+            if (isset($fieldNameParts[1])) {
+                $model = $fieldNameParts[0];
+                $fieldName = $fieldNameParts[1];
+            } else {
+                $model = $serviceName;
+                $fieldName = $fieldNameParts[0];
+            }
+            if (!isset($models[$model])) {
+                $models[$model] = [
+                    'id' => $model,
+                    'required' => [],
+                    'properties' => [],
+                ];
+            }
+            $models[$model]['properties'][$fieldName] = [
                 'type' => method_exists($field, 'getType') ? $field->getType() : 'string',
                 'description' => $field->getDescription()
             ];
             if ($field->isRequired()) {
-                $requiredProperties[] = $field->getName();
+                $models[$model]['properties']['required'][] = $fieldName;
             }
         }
 
@@ -172,13 +194,7 @@ class Service extends BaseService
             'resourcePath'   => $routeBasePath,
             'apis'           => $operationGroups,
             'produces'       => $service->requestAcceptTypes,
-            'models'         => [
-                $service->getName() => [
-                    'id'         => $service->getName(),
-                    'required'   => $requiredProperties,
-                    'properties' => $properties,
-                ],
-            ],
+            'models'         => $models,
         ];
     }
 }
