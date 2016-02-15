@@ -178,12 +178,18 @@ class Service extends BaseService
                     'properties' => [],
                 ];
             }
-            $models[$model]['properties'][$fieldName] = [
+            $fieldData = [
                 'type' => method_exists($field, 'getType') ? $field->getType() : 'string',
                 'description' => $field->getDescription()
             ];
+            if (preg_match('#^\[(.*)\]$#',$fieldData['type'], $fieldTypeMatch)) {
+                $fieldData['type'] = 'array';
+                $fieldData['items'] = ['type' => $fieldTypeMatch[1]];
+            }
+
+            $models[$model]['properties'][$fieldName] = $fieldData;
             if ($field->isRequired()) {
-                $models[$model]['properties']['required'][] = $fieldName;
+                $models[$model]['required'][] = $fieldName;
             }
         }
 
