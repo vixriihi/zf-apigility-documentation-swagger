@@ -182,6 +182,9 @@ class Service extends BaseService
                 'type' => method_exists($field, 'getType') ? $field->getType() : 'string',
                 'description' => $field->getDescription()
             ];
+            if (method_exists($field, 'getEnum') && $field->getEnum()) {
+                $fieldData['enum'] = $field->getEnum();
+            }
             if (preg_match('#^\[(.*)\]$#',$fieldData['type'], $fieldTypeMatch)) {
                 $fieldData['type'] = 'array';
                 $fieldData['items'] = ['type' => $fieldTypeMatch[1]];
